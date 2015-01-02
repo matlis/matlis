@@ -9,7 +9,6 @@ struct Tester
 {
     typedef typename Env::Allocator Allocator;
     typedef typename Env::Scheme::obj_t obj_t;
-    typedef typename Env::Scheme::cons_t cons_t;
 	typedef typename Env::Scheme::Transfer Transfer;
 
     template<class T>

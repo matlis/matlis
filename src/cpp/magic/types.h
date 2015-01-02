@@ -30,40 +30,42 @@ struct SimpleScheme
 		virtual void obj_transfer( obj_t* p, const Transfer& transfer ) const = 0;
 		virtual ~obj_t() {}
 	};
+	
+	struct boxset_t;
 
 	/* Boxed types managed and exposed to user code */
 	struct box_t : obj_t
 	{
-		virtual auto dispatch( const box_t* ) -> box_t*;
+		virtual auto dispatch( const boxset_t* args ) -> box_t*;
 	};
 	
-	class cons_t : public obj_t
+	struct boxset_t : obj_t
 	{
-		obj_t* _car;
-		obj_t* _cdr;
-	public:
-		cons_t( obj_t* car, obj_t* cdr )
-			: _car( car ), _cdr( cdr )
+		box_t* item;
+		boxset_t* next;
+
+		boxset_t( box_t* i, boxset_t* n )
+			: item( i ), next( n )
 		{
-			System::assert( car != 0, "cons_t car cannot be 0" );
-			System::assert( cdr != 0, "cons_t cdr cannot be 0" );
+			System::assert( item != 0, "boxset_t item cannot be 0" );
+			System::assert( next != 0, "boxset_t next cannot be 0" );
 		}
 			
-		cons_t()
-			: _car( 0 ), _cdr( 0 ) {}
+		boxset_t()
+			: item( 0 ), next( 0 ) {}
 	
-		virtual auto obj_nchildren() const -> size_t { return is_null() ? 0 : 2; }
-		virtual auto obj_child( size_t i ) const -> const obj_t* { return i == 0 ? _car : _cdr; }
+		virtual auto obj_nchildren() const -> size_t { return is_empty() ? 0 : 2; }
+		virtual auto obj_child( size_t i ) const -> const obj_t* { return i == 0 ? item : next; }
 		virtual auto obj_sizeof() const -> size_t { return sizeof(*this); }
 		virtual void obj_transfer( obj_t* p, const Transfer& transfer ) const
 		{
-			if( is_null() )
-				new (p) cons_t;
+			if( is_empty() )
+				new (p) boxset_t;
 			else
-				new (p) cons_t( transfer.at(_car), transfer.at(_cdr) );
+				new (p) boxset_t( transfer.at(item), (boxset_t*) transfer.at(next) );
 		}
 		
-		virtual auto is_null() const -> bool { return _car == 0; }
+		virtual auto is_empty() const -> bool { return next == 0; }
 	};
 };
 
