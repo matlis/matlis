@@ -55,20 +55,27 @@ struct Tester
     {TEST
     	Allocator a;
     	
-    	auto_root<cons_t> null( a, a.template new_obj<cons_t>() );
     	{
-    		auto i7 = a.template new_obj<test_int_t>( 7 );
-    		test( i7->val == 7, "test int has wrong value" );
-    		test( test_int_t::live_count() == 1, "Wrong live count after allocation" );
-    		auto_root<obj_t> pair( a, a.template new_obj<test_pair_t>( i7, null ) );
+    		auto_root<obj_t> i0( a, a.template new_obj<test_int_t>(0) );
+    		{
+    			auto i7 = a.template new_obj<test_int_t>( 7 );
+    			test( i7->val == 7, "test int has wrong value" );
+    			test( test_int_t::live_count() == 2, "Wrong live count after allocation" );
+    			auto_root<obj_t> pair( a, a.template new_obj<test_pair_t>( i7, i0 ) );
+    	
+    			a.gc();
+    			test( a.num_allocated() == 3, "Num allocated incorrect after gc (1)" );
+    		}
     	
     		a.gc();
-    		test( a.num_allocated() == 3, "Num allocated incorrect after gc (1)" );
+    		test( a.num_allocated() == 1, "Num allocated incorrect after gc (2)" );
+    		test( test_int_t::live_count() == 1, "Wrong live count after gc" );
     	}
     	
     	a.gc();
-    	test( a.num_allocated() == 1, "Num allocated incorrect after gc (2)" );
-    	test( test_int_t::live_count() == 0, "Wrong live count after gc" );
+    	test( a.num_allocated() == 0, "Num allocated incorrect after gc (3)" );
+    	test( test_int_t::live_count() == 0, "Wrong live count after final gc" );
+    	
     }
     
     static void run_tests()
