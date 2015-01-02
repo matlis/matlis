@@ -41,6 +41,7 @@ struct Error : Error<Type>
 
 struct Assertion;
 struct Test;
+struct NotImplemented;
 
 inline void fail( const std::string& msg )
 {

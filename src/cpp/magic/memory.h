@@ -32,11 +32,15 @@ public:
 	void del_root( obj_t** root ) { _obj_roots.erase( root ); }
 
     template<class T>
-    struct auto_root_ref : T
+    struct auto_root_ref
     {
         Allocator& alloc;
+        T* ptr;
+    
+        auto operator->() const -> T* { return ptr; }
+		auto operator*() const -> T& { return *ptr; }
 
-        auto_root_ref( Allocator& a, const T& root ) : T( root ), alloc( a ) {}
+        auto_root_ref( Allocator& a, T* root ) : ptr( root ), alloc( a ) {}
     };
 
     template<class T>
@@ -47,11 +51,21 @@ public:
     public:
         typedef auto_root_ref<T> ref;
 
-        auto_root( Allocator& alloc, const T& root=T() ) : ref( alloc, root ) { this->alloc.add_root( this ); }
-        auto_root( const auto_root_ref<T>& r ) : ref( r ) { this->alloc.add_root( this ); }
-        ~auto_root() { this->alloc.del_root( this ); }
-        auto_root& operator=( const T& t ) { (T&) *this = t; return *this; }
+        auto_root( Allocator& alloc, T* root=0 ) : ref( alloc, root ) { this->alloc.add_root( (obj_t**) &this->ptr ); }
+        auto_root( const auto_root_ref<T>& r ) : ref( r ) { this->alloc.add_root( (obj_t**) &this->ptr ); }
+        ~auto_root() { this->alloc.del_root( (obj_t**) &this->ptr ); }
+        auto_root& operator=( T* p ) { this->_ptr = p; return *this; }
+        operator T*() const { return this->ptr; }
     };
+    
+    ~AllocatorBase()
+	{
+		if( !_obj_roots.empty() )
+		{
+			std::cerr << "Objects remain on allocator destruction" << std::endl;
+			throw Error<Assertion>( "Objects remain on allocator destruction" );
+		}
+	}
 };
 
 /**
@@ -74,6 +88,7 @@ private:
 	auto _post_alloc( obj_t* p ) -> obj_t*;
     static void _mark( std::set<const obj_t*>& live, const obj_t* p );
     void _shift();
+    static void _destroy( const obj_t* p ) { p->~obj_t(); free( (void*) p ); }
 public:
 	static auto name() -> std::string { return "test"; }
 	
@@ -82,11 +97,8 @@ public:
 
 	~TestAllocator()
 	{
-		if( !_allocated.empty() )
-		{
-			std::cerr << "Objects remain on allocator destruction" << std::endl;
-			throw Error<Assertion>( "Objects remain on allocator destruction" );
-		}
+		for( auto p : _allocated )
+			_destroy( p );
 	}
 
 	void gc();

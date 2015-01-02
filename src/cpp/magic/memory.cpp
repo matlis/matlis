@@ -9,6 +9,8 @@ using namespace magic;
 template<class System, MetaScheme class SchemeT>
 auto TestAllocator<System, SchemeT>::_post_alloc( obj_t* p ) -> obj_t*
 {
+	_allocated.insert( p );
+	
 	this->add_root( &p );
     _shift();
 	if( --_reserved == 0 )
@@ -32,10 +34,7 @@ void TestAllocator<System, SchemeT>::gc()
     for( auto p : all )
     {
         if( _allocated.find( p ) == _allocated.end() )
-        {
-        	p->~obj_t();
-        	free( (void*) p );
-        }
+        	_destroy( p );
     }
 }
 
