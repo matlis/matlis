@@ -82,10 +82,10 @@ public:
 
 	~TestAllocator()
 	{
-		for( auto p : _allocated )
+		if( !_allocated.empty() )
 		{
-			p->obj_destroy();
-            delete p;
+			std::cerr << "Objects remain on allocator destruction" << std::endl;
+			throw Error<Assertion>( "Objects remain on allocator destruction" );
 		}
 	}
 

@@ -30,8 +30,13 @@ void TestAllocator<System, SchemeT>::gc()
         _mark( _allocated, *r );
 
     for( auto p : all )
+    {
         if( _allocated.find( p ) == _allocated.end() )
-            delete p;
+        {
+        	p->~obj_t();
+        	free( (void*) p );
+        }
+    }
 }
 
 

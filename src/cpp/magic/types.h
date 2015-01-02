@@ -28,7 +28,7 @@ struct SimpleScheme
 		virtual auto obj_child( size_t i ) const -> const obj_t* = 0;
 		virtual auto obj_sizeof() const -> size_t = 0;
 		virtual void obj_transfer( obj_t* p, const Transfer& transfer ) const = 0;
-		virtual void obj_destroy() const = 0;
+		virtual ~obj_t() {}
 	};
 
 	/* Boxed types managed and exposed to user code */
@@ -62,7 +62,6 @@ struct SimpleScheme
 			else
 				new (p) cons_t( transfer.at(_car), transfer.at(_cdr) );
 		}
-		virtual void obj_destroy() const {}
 		
 		virtual auto is_null() const -> bool { return _car == 0; }
 	};
