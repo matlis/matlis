@@ -9,6 +9,7 @@ struct Tester
 {
     typedef typename Env::Allocator Allocator;
     typedef typename Env::Scheme::obj_t obj_t;
+    typedef typename Env::Scheme::cons_t cons_t;
 
     template<class T>
     using auto_root_ref = typename Allocator::template auto_root_ref<T>;
@@ -18,6 +19,10 @@ struct Tester
 
     static void test_objs()
     {TEST
+    	Allocator a;
+    	
+    	auto null = a.template new_obj<cons_t>();
+    	auto cons = a.template new_obj<cons_t>( null, null );
     }
     
     static void run_tests()

@@ -20,20 +20,16 @@ protected:
 	typedef AllocatorT<System, SchemeT> Allocator;
 	typedef typename Scheme::obj_t obj_t;
 	
-	const size_t _maxmem;
 	size_t _gc_count;
-	std::set<obj_t*> _obj_roots;
+	std::set<obj_t**> _obj_roots;
 
-	AllocatorBase( size_t maxmem )
-		: _maxmem( maxmem ), _gc_count( 0 )
-    {
-        System::assert( maxmem > 0, "Allocator must allocate at least some memory" );
-    }
+	AllocatorBase()
+		: _gc_count( 0 ) {}
 public:
     auto gc_count() const -> size_t { return _gc_count; }
 
-    void add_root( obj_t* root ) { _obj_roots.insert( root ); }
-	void del_root( obj_t* root ) { _obj_roots.erase( root ); }
+    void add_root( obj_t** root ) { _obj_roots.insert( root ); }
+	void del_root( obj_t** root ) { _obj_roots.erase( root ); }
 
     template<class T>
     struct auto_root_ref : T
@@ -70,15 +66,19 @@ struct TestAllocator : AllocatorBase< System, SchemeT, TestAllocator >
     typedef SchemeT<System> Scheme;
     typedef typename Scheme::obj_t obj_t;
 private:
-    std::set<obj_t*> _allocated;
+	static const size_t RESERVED = 4096;
+	
+    std::set<const obj_t*> _allocated;
+    size_t _reserved;
 
+	auto _post_alloc( obj_t* p ) -> obj_t*;
     static void _mark( std::set<const obj_t*>& live, const obj_t* p );
     void _shift();
 public:
 	static auto name() -> std::string { return "test"; }
 	
-    TestAllocator( size_t maxmem )
-        : AllocatorBase<System, SchemeT, TestAllocator>( maxmem ), _allocated() {}
+    TestAllocator()
+        : AllocatorBase<System, SchemeT, TestAllocator>(), _allocated(), _reserved( RESERVED ) {}
 
 	~TestAllocator()
 	{
@@ -90,6 +90,24 @@ public:
 	}
 
 	void gc();
+	
+	template<class T>
+	auto new_obj() -> T*
+    {
+		return (T*) _post_alloc( new (malloc(sizeof(T))) T );
+    }
+    
+    template<class T, class T1>
+	auto new_obj( const T1& t1 ) -> T*
+    {
+		return (T*) _post_alloc( new (malloc(sizeof(T))) T( t1 ) );
+    }
+	
+	template<class T, class T1, class T2>
+	auto new_obj( const T1& t1, const T2& t2 ) -> T*
+    {
+		return (T*) _post_alloc( new (malloc(sizeof(T))) T( t1, t2 ) );
+    }
 
     auto num_allocated() const -> size_t
     {

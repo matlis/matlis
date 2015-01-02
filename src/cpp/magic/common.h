@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <type_traits>
 
 /** MAGIC - MAthematical Generic Intermediate Code  **/
 
@@ -61,18 +62,7 @@ inline void test( bool cond, const std::string& msg )
 
 #define TEST std::cout << "\n" << __FUNCTION__ << ": " << std::flush;
 
-template<bool>
-struct ASSERT_FAILED;
-
-template<>
-struct ASSERT_FAILED< true > {};
-
-template< size_t n >
-struct assert_test {};
-
-#define APPLY(fn,x,y) fn(x,y)
-#define CONCAT(x,y) x##y
-#define ASSERT( cond ) typedef assert_test< sizeof( ASSERT_FAILED< ( cond ) > ) > APPLY( CONCAT, assert_test_type, __COUNTER__ )
+#define ASSERT std::static_assert
 
 inline auto extract_type_name( const char* name ) -> auto
 {
