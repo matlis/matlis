@@ -12,7 +12,7 @@ struct Tester
 	typedef typename Env::Scheme::Transfer Transfer;
 
     template<class T>
-    using auto_root = typename Allocator::template auto_root<T>;
+    using auto_root_ptr = typename Allocator::template auto_root_ptr<T>;
 
 	struct test_int_t : obj_t
 	{
@@ -55,12 +55,12 @@ struct Tester
     	Allocator a;
     	
     	{
-    		auto_root<obj_t> i0 = a.template new_obj<test_int_t>(0);
+    		auto_root_ptr<obj_t> i0 = a.template new_obj<test_int_t>(0);
     		{
     			auto i7 = a.template new_obj<test_int_t>( 7 );
     			test( i7->val == 7, "test int has wrong value" );
     			test( test_int_t::live_count() == 2, "Wrong live count after allocation" );
-    			auto_root<obj_t> pair = a.template new_obj<test_pair_t>( i7, i0 );
+    			auto_root_ptr<obj_t> pair = a.template new_obj<test_pair_t>( i7, i0 );
     	
     			a.gc();
     			test( a.num_allocated() == 3, "Num allocated incorrect after gc (1)" );
