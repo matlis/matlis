@@ -39,6 +39,7 @@ public:
     
         auto operator->() const -> T* { return ptr; }
 		auto operator*() const -> T& { return *ptr; }
+		operator T*() const { return this->ptr; }
 
         auto_root_ref( Allocator& a, T* root ) : ptr( root ), alloc( a ) {}
     };
@@ -52,10 +53,11 @@ public:
         typedef auto_root_ref<T> ref;
 
         auto_root( Allocator& alloc, T* root=0 ) : ref( alloc, root ) { this->alloc.add_root( (obj_t**) &this->ptr ); }
-        auto_root( const auto_root_ref<T>& r ) : ref( r ) { this->alloc.add_root( (obj_t**) &this->ptr ); }
+        template<class S>
+        auto_root( const auto_root_ref<S>& r ) : ref( r.alloc, r.ptr ) { this->alloc.add_root( (obj_t**) &this->ptr ); }
         ~auto_root() { this->alloc.del_root( (obj_t**) &this->ptr ); }
         auto_root& operator=( T* p ) { this->_ptr = p; return *this; }
-        operator T*() const { return this->ptr; }
+		operator T*() const { return this->ptr; }
     };
     
     ~AllocatorBase()
@@ -79,6 +81,9 @@ struct TestAllocator : AllocatorBase< System, SchemeT, TestAllocator >
 {
     typedef SchemeT<System> Scheme;
     typedef typename Scheme::obj_t obj_t;
+    typedef AllocatorBase< System, SchemeT, TestAllocator > Base;
+    template<class T>
+    using auto_root_ref = typename Base::template auto_root_ref<T>;
 private:
 	static const size_t RESERVED = 4096;
 	
@@ -104,21 +109,21 @@ public:
 	void gc();
 	
 	template<class T>
-	auto new_obj() -> T*
+	auto new_obj() -> auto_root_ref<T>
     {
-		return (T*) _post_alloc( new (malloc(sizeof(T))) T );
+		return auto_root_ref<T>( *this, (T*) _post_alloc( new (malloc(sizeof(T))) T ) );
     }
     
     template<class T, class T1>
-	auto new_obj( const T1& t1 ) -> T*
+	auto new_obj( const T1& t1 ) -> auto_root_ref<T>
     {
-		return (T*) _post_alloc( new (malloc(sizeof(T))) T( t1 ) );
+		return auto_root_ref<T>( *this, (T*) _post_alloc( new (malloc(sizeof(T))) T( t1 ) ) );
     }
 	
 	template<class T, class T1, class T2>
-	auto new_obj( const T1& t1, const T2& t2 ) -> T*
+	auto new_obj( const T1& t1, const T2& t2 ) -> auto_root_ref<T>
     {
-		return (T*) _post_alloc( new (malloc(sizeof(T))) T( t1, t2 ) );
+		return auto_root_ref<T>( *this, (T*) _post_alloc( new (malloc(sizeof(T))) T( t1, t2 ) ) );
     }
 
     auto num_allocated() const -> size_t
