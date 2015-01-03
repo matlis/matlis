@@ -12,7 +12,13 @@ template<class System>
 struct SimpleScheme
 {
 	/* All reference types */
-	struct ref_t {};
+	class ref_t
+	{
+		ref_t( const ref_t& );
+		auto operator=( const ref_t& );
+	protected:
+		ref_t() {}
+	};
 
 	/* All implementation types (unmanaged) */
 	struct impl_t : ref_t {};
