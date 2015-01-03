@@ -1,6 +1,7 @@
 #include "tests.h"
 #include "memory.h"
 #include "runtime.h"
+#include "boxes/kernel/Parser.h"
 
 namespace magic {
 
@@ -76,9 +77,17 @@ struct Tester
     	test( test_int_t::live_count() == 0, "Wrong live count after final gc" );
     }
     
+    static void test_parser()
+    {TEST
+    	Parser<Env> parser;
+    	
+    	parser.parse( "(a)" );
+    }
+    
     static void run_tests()
     {
     	test_objs();
+    	test_parser();
     }
 };
 
