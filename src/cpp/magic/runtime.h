@@ -45,7 +45,10 @@ struct Env
     using Allocator = AllocatorT<System, SchemeT>;
     using Interpreter = InterpreterT<System, SchemeT, AllocatorT>;
 
+	using Transfer = typename Scheme::Transfer;
+	using impl_t = typename Scheme::impl_t;
     using obj_t = typename Scheme::obj_t;
+    using box_t = typename Scheme::box_t;
 };
 
 }   //namespace

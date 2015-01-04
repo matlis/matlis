@@ -42,7 +42,10 @@ struct SimpleScheme
 	/* Boxed types managed and exposed to user code */
 	struct box_t : obj_t
 	{
-		virtual auto dispatch( const boxset_t* args ) -> box_t*;
+		virtual auto dispatch( const boxset_t* args ) -> box_t*
+		{
+			throw Error<NotImplemented>( "box_t::dispatch" );
+		}
 	};
 	
 	struct boxset_t : obj_t

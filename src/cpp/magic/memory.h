@@ -47,17 +47,42 @@ public:
     template<class T>
     class auto_root_ptr : public auto_root_ptr_ref<T>
     {
-        explicit auto_root_ptr( const auto_root_ptr& );
-        auto_root_ptr& operator=( const auto_root_ptr& );
+    	auto_root_ptr( const auto_root_ptr& );
+    	auto_root_ptr& operator=( const auto_root_ptr& r );
     public:
         typedef auto_root_ptr_ref<T> ref;
 
-        auto_root_ptr( Allocator& alloc, T* root=0 ) : ref( alloc, root ) { this->alloc.add_root( (obj_t**) &this->ptr ); }
+        auto_root_ptr( Allocator& alloc, T* root=0 )
+        	: ref( alloc, root )
+        {
+        	this->alloc.add_root( (obj_t**) &this->ptr );
+        }
+        
         template<class S>
-        auto_root_ptr( const auto_root_ptr_ref<S>& r ) : ref( r.alloc, r.ptr ) { this->alloc.add_root( (obj_t**) &this->ptr ); }
-        ~auto_root_ptr() { this->alloc.del_root( (obj_t**) &this->ptr ); }
-        auto_root_ptr& operator=( T* p ) { this->_ptr = p; return *this; }
-		operator T*() const { return this->ptr; }
+        auto_root_ptr( const auto_root_ptr_ref<S>& r )
+        	: ref( r.alloc, r.ptr )
+        {
+        	this->alloc.add_root( (obj_t**) &this->ptr );
+        }
+        
+        ~auto_root_ptr()
+        {
+        	this->alloc.del_root( (obj_t**) &this->ptr );
+        }
+        
+        template<class S>
+        auto_root_ptr& operator=( const auto_root_ptr_ref<S>& r )
+        {
+        	this->alloc.del_root( (obj_t**) &this->ptr );
+        	this->ptr = r.ptr;
+        	this->alloc.add_root( (obj_t**) &this->ptr );
+        	return *this;
+        }
+        
+		operator T*() const
+		{
+			return this->ptr;
+		}
     };
     
     ~AllocatorBase()

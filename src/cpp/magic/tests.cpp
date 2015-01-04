@@ -2,6 +2,7 @@
 #include "memory.h"
 #include "runtime.h"
 #include "boxes/kernel/Parser.h"
+#include "boxes/Apply.h"
 
 namespace magic {
 
@@ -10,10 +11,14 @@ struct Tester
 {
     typedef typename Env::Allocator Allocator;
     typedef typename Env::Scheme::obj_t obj_t;
+    typedef typename Env::Scheme::box_t box_t;
 	typedef typename Env::Scheme::Transfer Transfer;
 
     template<class T>
     using auto_root_ptr = typename Allocator::template auto_root_ptr<T>;
+    
+    template<class T>
+    using auto_root_ptr_ref = typename Allocator::template auto_root_ptr_ref<T>;
 
 	struct test_int_t : obj_t
 	{
@@ -77,17 +82,29 @@ struct Tester
     	test( test_int_t::live_count() == 0, "Wrong live count after final gc" );
     }
     
-    static void test_parser()
+    static void test_boxes()
     {TEST
-    	Parser<Env> parser;
+    	Allocator a;
     	
-    	parser.parse( "(a)" );
+    	auto_root_ptr<box_t> root( a );
+    	{
+    		//replace with Int
+    		auto_root_ptr<obj_t> i8 = a.template new_obj<test_int_t>(8);
+    	
+    		//auto_root_ptr_ref<box_t> r = a.template new_obj<ApplyBox<Env>>( i8, i8 );
+    		//root = r;
+    	}
+    	
+    	a.gc();
+    	
+    	std::cout << a.num_allocated() << std::endl;
+    	test( a.num_allocated() == 2, "Wrong number of boxes after gc" );
     }
     
     static void run_tests()
     {
     	test_objs();
-    	test_parser();
+    	test_boxes();
     }
 };
 
