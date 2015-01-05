@@ -1,7 +1,7 @@
 #include "tests.h"
 #include "memory.h"
 #include "runtime.h"
-#include "boxes/kernel/Parser.h"
+#include "boxes/Parser.h"
 #include "boxes/Apply.h"
 
 namespace magic {
@@ -16,14 +16,14 @@ struct Tester
 
     template<class T>
     using auto_root_ptr = typename Allocator::template auto_root_ptr<T>;
-    
+
     template<class T>
     using auto_root_ptr_ref = typename Allocator::template auto_root_ptr_ref<T>;
 
 	struct test_int_t : obj_t
 	{
 		int val;
-		
+
 		static int& live_count() { static int i = 0; return i; }
 
 		test_int_t( int i ) : val( i ) { live_count() += 1; }
@@ -38,7 +38,7 @@ struct Tester
 		}
 		virtual ~test_int_t() { live_count() -= 1; }
 	};
-	
+
 	struct test_pair_t : obj_t
 	{
 		obj_t* first;
@@ -59,48 +59,46 @@ struct Tester
     static void test_objs()
     {TEST
     	Allocator a;
-    	
+
     	{
     		auto_root_ptr<obj_t> i0 = a.template new_obj<test_int_t>(0);
     		{
-    			auto i7 = a.template new_obj<test_int_t>( 7 );
+    			auto_root_ptr<test_int_t> i7 = a.template new_obj<test_int_t>( 7 );
     			test( i7->val == 7, "test int has wrong value" );
     			test( test_int_t::live_count() == 2, "Wrong live count after allocation" );
-    			auto_root_ptr<obj_t> pair = a.template new_obj<test_pair_t>( i7, i0 );
-    	
+    			auto_root_ptr<test_pair_t> pair = a.template new_obj<test_pair_t>( i7, i0 );
+
     			a.gc();
     			test( a.num_allocated() == 3, "Num allocated incorrect after gc (1)" );
     		}
-    	
+
     		a.gc();
     		test( a.num_allocated() == 1, "Num allocated incorrect after gc (2)" );
     		test( test_int_t::live_count() == 1, "Wrong live count after gc" );
     	}
-    	
+
     	a.gc();
     	test( a.num_allocated() == 0, "Num allocated incorrect after gc (3)" );
     	test( test_int_t::live_count() == 0, "Wrong live count after final gc" );
     }
-    
+
     static void test_boxes()
     {TEST
     	Allocator a;
-    	
+
     	auto_root_ptr<box_t> root( a );
     	{
     		//replace with Int
     		auto_root_ptr<obj_t> i8 = a.template new_obj<test_int_t>(8);
-    	
-    		//auto_root_ptr_ref<box_t> r = a.template new_obj<ApplyBox<Env>>( i8, i8 );
-    		//root = r;
+
+    		root = a.template new_obj<ApplyBox<Env>>( i8, i8 );
     	}
-    	
+
     	a.gc();
-    	
-    	std::cout << a.num_allocated() << std::endl;
+
     	test( a.num_allocated() == 2, "Wrong number of boxes after gc" );
     }
-    
+
     static void run_tests()
     {
     	test_objs();

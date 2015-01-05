@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="MatLis" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Option virtualFolders="magic/;magic/boxes/;" />
+		<Build>
+			<Target title="Release">
+				<Option output="bin/Release/MatLis" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions -std=c++14" />
+		</Compiler>
+		<Unit filename="magic/boxes/Apply.h">
+			<Option virtualFolder="magic/boxes/" />
+		</Unit>
+		<Unit filename="magic/boxes/Parser.h">
+			<Option virtualFolder="magic/boxes/" />
+		</Unit>
+		<Unit filename="magic/common.h">
+			<Option virtualFolder="magic/" />
+		</Unit>
+		<Unit filename="magic/interpreter.h">
+			<Option virtualFolder="magic/" />
+		</Unit>
+		<Unit filename="magic/memory.cpp">
+			<Option virtualFolder="magic/" />
+		</Unit>
+		<Unit filename="magic/memory.h">
+			<Option virtualFolder="magic/" />
+		</Unit>
+		<Unit filename="magic/runtime.h">
+			<Option virtualFolder="magic/" />
+		</Unit>
+		<Unit filename="magic/tests.cpp">
+			<Option virtualFolder="magic/" />
+		</Unit>
+		<Unit filename="magic/tests.h">
+			<Option virtualFolder="magic/" />
+		</Unit>
+		<Unit filename="magic/types.h">
+			<Option virtualFolder="magic/" />
+		</Unit>
+		<Unit filename="matlis.cpp" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

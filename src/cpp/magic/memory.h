@@ -5,7 +5,7 @@
 #include <set>
 
 namespace magic {
-	
+
 struct OutOfMemory {};
 
 #define MetaAllocator template<class System, template<class> class SchemeT>
@@ -19,7 +19,7 @@ protected:
 	typedef SchemeT<System> Scheme;
 	typedef AllocatorT<System, SchemeT> Allocator;
 	typedef typename Scheme::obj_t obj_t;
-	
+
 	size_t _gc_count;
 	std::set<obj_t**> _obj_roots;
 
@@ -36,18 +36,18 @@ public:
     {
         Allocator& alloc;
         T* ptr;
-    
-        auto operator->() const -> T* { return ptr; }
-		auto operator*() const -> T& { return *ptr; }
-		operator T*() const { return this->ptr; }
 
-        auto_root_ptr_ref( Allocator& a, T* root ) : ptr( root ), alloc( a ) {}
+        //auto operator->() const -> T* { return ptr; }
+		//auto operator*() const -> T& { return *ptr; }
+		//operator T*() const { return this->ptr; }
+
+        auto_root_ptr_ref( Allocator& a, T* root ) : alloc( a ), ptr( root ) {}
     };
 
     template<class T>
     class auto_root_ptr : public auto_root_ptr_ref<T>
     {
-    	auto_root_ptr( const auto_root_ptr& );
+        auto_root_ptr( auto_root_ptr&  );
     	auto_root_ptr& operator=( const auto_root_ptr& r );
     public:
         typedef auto_root_ptr_ref<T> ref;
@@ -57,34 +57,44 @@ public:
         {
         	this->alloc.add_root( (obj_t**) &this->ptr );
         }
-        
+
+        ~auto_root_ptr()
+        {
+            if( this->ptr != 0 )
+                this->alloc.del_root( (obj_t**) &this->ptr );
+        }
+
         template<class S>
         auto_root_ptr( const auto_root_ptr_ref<S>& r )
         	: ref( r.alloc, r.ptr )
         {
         	this->alloc.add_root( (obj_t**) &this->ptr );
         }
-        
-        ~auto_root_ptr()
-        {
-        	this->alloc.del_root( (obj_t**) &this->ptr );
-        }
-        
+
         template<class S>
         auto_root_ptr& operator=( const auto_root_ptr_ref<S>& r )
         {
-        	this->alloc.del_root( (obj_t**) &this->ptr );
+            System::assert( &this->alloc == &r.alloc, "auto_root_ptr assignment used with differing allocators" );
         	this->ptr = r.ptr;
-        	this->alloc.add_root( (obj_t**) &this->ptr );
         	return *this;
         }
-        
-		operator T*() const
+
+		auto operator->() const -> T*
 		{
 			return this->ptr;
 		}
+
+		auto operator*() const -> T&
+		{
+			return *this->ptr;
+		}
+
+		operator T*() const
+		{
+		    return this->ptr;
+		}
     };
-    
+
     ~AllocatorBase()
 	{
 		if( !_obj_roots.empty() )
@@ -111,7 +121,7 @@ struct TestAllocator : AllocatorBase< System, SchemeT, TestAllocator >
     using auto_root_ptr_ref = typename Base::template auto_root_ptr_ref<T>;
 private:
 	static const size_t RESERVED = 4096;
-	
+
     std::set<const obj_t*> _allocated;
     size_t _reserved;
 
@@ -121,7 +131,7 @@ private:
     static void _destroy( const obj_t* p ) { p->~obj_t(); free( (void*) p ); }
 public:
 	static auto name() -> std::string { return "test"; }
-	
+
     TestAllocator()
         : AllocatorBase<System, SchemeT, TestAllocator>(), _allocated(), _reserved( RESERVED ) {}
 
@@ -132,19 +142,19 @@ public:
 	}
 
 	void gc();
-	
+
 	template<class T>
 	auto new_obj() -> auto_root_ptr_ref<T>
     {
 		return auto_root_ptr_ref<T>( *this, (T*) _post_alloc( new (malloc(sizeof(T))) T ) );
     }
-    
+
     template<class T, class T1>
 	auto new_obj( const T1& t1 ) -> auto_root_ptr_ref<T>
     {
 		return auto_root_ptr_ref<T>( *this, (T*) _post_alloc( new (malloc(sizeof(T))) T( t1 ) ) );
     }
-	
+
 	template<class T, class T1, class T2>
 	auto new_obj( const T1& t1, const T2& t2 ) -> auto_root_ptr_ref<T>
     {
@@ -155,7 +165,7 @@ public:
     {
         return _allocated.size();
     }
-    
+
     auto num_total() const -> size_t
     {
     	return _allocated.size();
