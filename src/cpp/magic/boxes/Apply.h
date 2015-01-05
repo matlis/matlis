@@ -4,17 +4,16 @@
 #include "../runtime.h"
 
 namespace magic {
-	
+
 template<class Env>
 struct ApplyImpl : Env::impl_t
 {
-	typedef typename Env::obj_t obj_t;
-	
-	const obj_t* const lhs;
-	const obj_t* const rhs;
-	
-	
-	ApplyImpl( const obj_t* l, const obj_t* r )
+	typedef typename Env::box_t box_t;
+
+	const box_t* const lhs;
+	const box_t* const rhs;
+
+	ApplyImpl( const box_t* l, const box_t* r )
 		: lhs( l ), rhs( r ) {}
 };
 
@@ -23,16 +22,17 @@ struct ApplyBox : Env::box_t
 {
 	typedef typename Env::Transfer Transfer;
 	typedef typename Env::obj_t obj_t;
-	
-	ApplyImpl<Env> _impl;
-	
-	ApplyBox( const obj_t* lhs, const obj_t* rhs )
-		: _impl( lhs, rhs ) {}
-	
+	typedef typename Env::box_t box_t;
+
+	ApplyImpl<Env> impl;
+
+	ApplyBox( const box_t* lhs, const box_t* rhs )
+		: impl( lhs, rhs ) {}
+
 	virtual auto obj_nchildren() const -> size_t { return 2; }
-	virtual auto obj_child( size_t i ) const -> const obj_t* { return i == 0 ? _impl.lhs : _impl.rhs; }
+	virtual auto obj_child( size_t i ) const -> const obj_t* { return i == 0 ? impl.lhs : impl.rhs; }
 	virtual auto obj_sizeof() const -> size_t { return sizeof(*this); }
-	virtual void obj_transfer( obj_t* p, const Transfer& transfer ) const { new (p) ApplyBox( transfer.at(_impl.lhs), transfer.at(_impl.rhs) ); }
+	virtual void obj_transfer( obj_t* p, const Transfer& transfer ) const { new (p) ApplyBox( (box_t*) transfer.at(impl.lhs), (box_t*) transfer.at(impl.rhs) ); }
 };
 
 }	//namespace

@@ -1,8 +1,9 @@
 #include "tests.h"
 #include "memory.h"
 #include "runtime.h"
-#include "boxes/Parser.h"
+#include "boxes/Int.h"
 #include "boxes/Apply.h"
+#include "boxes/Parser.h"
 
 namespace magic {
 
@@ -84,14 +85,20 @@ struct Tester
 
     static void test_boxes()
     {TEST
+        //Need to check types when implemented
+
     	Allocator a;
+
+    	typedef IntBox<Env> Int;
+    	typedef ApplyBox<Env> Apply;
 
     	auto_root_ptr<box_t> root( a );
     	{
-    		//replace with Int
-    		auto_root_ptr<obj_t> i8 = a.template new_obj<test_int_t>(8);
+    		auto_root_ptr<Int> i8 = a.template new_obj<Int>(8);
 
-    		root = a.template new_obj<ApplyBox<Env>>( i8, i8 );
+    		test( i8->impl.val == 8, "Int has wrong value" );
+
+    		root = a.template new_obj<Apply>( i8, i8 );
     	}
 
     	a.gc();

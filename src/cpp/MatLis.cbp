@@ -27,6 +27,9 @@
 		<Unit filename="magic/boxes/Apply.h">
 			<Option virtualFolder="magic/boxes/" />
 		</Unit>
+		<Unit filename="magic/boxes/Int.h">
+			<Option virtualFolder="magic/boxes/" />
+		</Unit>
 		<Unit filename="magic/boxes/Parser.h">
 			<Option virtualFolder="magic/boxes/" />
 		</Unit>
